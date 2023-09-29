@@ -24,9 +24,10 @@ splash() {
     --no-focus \
     --center \
     --text-align=center \
-    --image="/home/rory/Desktop/asus-ROG-profile-linux/assets/$1.png" \
+    --image="/opt/asus-ROG-profile-linux/assets/$1.png" \
     --sticky \
     --timeout=1 \
+    --borders=0 \
     --splash ) & 
 }
 
