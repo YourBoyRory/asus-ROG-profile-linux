@@ -14,6 +14,22 @@ notify() {
     fi
 }
 
+splash() {
+    pkill -P $$
+    ( yad \
+    --no-buttons \
+    --on-top \
+    --undecorated \
+    --skip-taskbar \
+    --no-focus \
+    --center \
+    --text-align=center \
+    --image="/home/rory/Desktop/asus-ROG-profile-linux/assets/$1.png" \
+    --sticky \
+    --timeout=1 \
+    --splash ) & 
+}
+
 if [[ $1 == "--quiet" || $2 == "--quiet" ]]; then
 	asusctl profile -PQuiet && notify-send -pe "$(asusctl profile -p)" "Default fan mode loaded." > /tmp/notifyID
 elif [[ $1 == "--balanced" || $2 == "--balanced" ]]; then
@@ -24,14 +40,14 @@ elif [[ $1 == "-h" ]]; then
 	echo "    "
 	echo " Fixes the fan selector button on Asus laptops using asusctl."
 	echo " Tested to work on Asus gaming laptops that have 'fn+F5' as the fan profile selector but in"
-	echo " should work on any laptop asusctl work on"
+	echo " should work on any laptop asusctl work on"f
 	echo " Here is some documentation for this horible program:"
 	echo "    "
 	echo "    asusfan [arguments]"
 	echo "    "
 	echo "    "
 	echo "    -h                Help."
-	echo "    -n  --no-notify   does not display notifications when switching, will still show boot notifications"
+	echo "    -n  --notify      display old notifications when switching"
 	echo "    "
 	echo "    --quiet	       Starts the script with setting the fan mode to Quiet by default."
 	echo "    --balanced       Starts the script with setting the fan mode to Balanced by default."
@@ -42,19 +58,7 @@ else
 	notify-send -pe "$(asusctl profile -p)" "Fan mode changer listening..."> /tmp/notifyID
 fi
 
-if [[ $1 == "--no-notify" || $2 == "--no-notify" || $1 == "-n" || $2 == "-n" ]]; then
-	while true; do
-		if [[ $(acpi_listen -c 1) = " 0B3CBB35-E3C2- 000000ff 00000000" ]]; then
-			if [[ $(powerprofilesctl list | grep '*') = "* power-saver:" ]]; then
-				asusctl profile -PQuiet
-			elif [[ $(powerprofilesctl list | grep '*') = "* balanced:" ]]; then
-				asusctl profile -PBalanced
-			elif [[ $(powerprofilesctl list | grep '*') = "* performance:" ]]; then
-				asusctl profile -PPerformance
-			fi
-		fi
-	done
-else 
+if [[ $1 == "--notify" || $2 == "--notify" || $1 == "-n" || $2 == "-n" ]]; then
 	while true; do
 		if [[ $(acpi_listen -c 1) = " 0B3CBB35-E3C2- 000000ff 00000000" ]]; then
 			if [[ $(powerprofilesctl list | grep '*') = "* power-saver:" ]]; then
@@ -66,6 +70,21 @@ else
 			elif [[ $(powerprofilesctl list | grep '*') = "* performance:" ]]; then
 				asusctl profile -PPerformance && notify-send --urgency=critical -rp $(head /tmp/notifyID) "$(asusctl profile -p)" "Fan mode changed to Performance." > /tmp/notifyID
 				notify $?
+			fi
+		fi
+	done
+else 
+    while true; do
+		if [[ $(acpi_listen -c 1) = " 0B3CBB35-E3C2- 000000ff 00000000" ]]; then
+			if [[ $(powerprofilesctl list | grep '*') = "* power-saver:" ]]; then
+				asusctl profile -PQuiet
+                splash 0
+			elif [[ $(powerprofilesctl list | grep '*') = "* balanced:" ]]; then
+				asusctl profile -PBalanced
+                splash 1
+			elif [[ $(powerprofilesctl list | grep '*') = "* performance:" ]]; then
+				asusctl profile -PPerformance
+                splash 2
 			fi
 		fi
 	done
