@@ -22,16 +22,16 @@ splash() {
     --undecorated \
     --skip-taskbar \
     --no-focus \
-    --center \
+    --posx=$(getCenter X) \
+    --posy=$(getCenter Y) \
+    --splash \
     --text-align=center \
     --image="/opt/asus-ROG-profile-linux/assets/$1.png" \
     --sticky \
     --timeout=1 \
-    --borders=0 \
-    --splash ) & 
+    --borders=0 ) & 
     
-    # --posx=$(getCenter X) \
-    # --posy=$(getCenter Y) \
+    # --center \
 }
 
 getCenter() {
