@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 echo 0 > /tmp/notifyCount
 
 notify() {
@@ -29,6 +30,20 @@ splash() {
     --timeout=1 \
     --borders=0 \
     --splash ) & 
+    
+    # --posx=$(getCenter X) \
+    # --posy=$(getCenter Y) \
+}
+
+getCenter() {
+    imageX=250
+    if [[ $1 == "X" ]]; then
+        Xaxis=$(xrandr --current | grep '*' | uniq | awk '{print $1}' | cut -d 'x' -f1) # finds screen width
+        echo $(( ($Xaxis/2)-($imageX/2 )))
+    elif [[ $1 == "Y" ]]; then
+        Yaxis=$(xrandr --current | grep '*' | uniq | awk '{print $1}' | cut -d 'x' -f2) # finds screen height
+        echo $(( (($Yaxis/2)-($imageX/2))+150 ))
+    fi
 }
 
 if [[ $1 == "--quiet" || $2 == "--quiet" ]]; then
