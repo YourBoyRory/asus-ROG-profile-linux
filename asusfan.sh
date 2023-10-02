@@ -145,6 +145,37 @@ fastMode() {
     fi
 }
 
+sendNotifyStandAlone() {
+    if [[ $(powerprofilesctl list | grep '*') = "* power-saver:" ]]; then
+        notify-send \
+            --icon="power-profile-power-saver-symbolic" \
+            --urgency=critical \
+            -rp \
+            $(head /tmp/notifyID) \
+            "$(asusctl profile -p)" \
+            "The CPU will under-clock to use less power and make less noise." > /tmp/notifyID
+        notify $?
+    elif [[ $(powerprofilesctl list | grep '*') = "* balanced:" ]]; then
+        notify-send \
+            --icon="power-profile-balanced-symbolic" \
+            --urgency=critical \
+            -rp \
+            $(head /tmp/notifyID) \
+            "$(asusctl profile -p)" \
+            "This CPU will run at base clock to balance battery and performance, fan may ramp up under load." > /tmp/notifyID
+        notify $?
+    elif [[ $(powerprofilesctl list | grep '*') = "* performance:" ]]; then
+        notify-send \
+            --icon="power-profile-performance-symbolic" \
+            --urgency=critical \
+            -rp \
+            $(head /tmp/notifyID) \
+            "$(asusctl profile -p)" \
+            "The CPU will be allowed to boost-clock to ensure the best performance, fan will ramp up under small loads and uses more battery." > /tmp/notifyID
+        notify $?
+    fi
+}
+
 if [[ $1 == "--quiet" || $2 == "--quiet" ]]; then
 	asusctl profile -PQuiet && notify-send --icon="power-profile-power-saver-symbolic" -pe "Forced: $(asusctl profile -p)" "Default fan mode loaded." > /tmp/notifyID
     lastMode="Quiet"
@@ -167,22 +198,26 @@ if [[ $1 == "--splash" || $2 == "--splash" || $1 == "-s" || $2 == "-s" ]]; then
     sleep $splashBootDelay && splash $lastMode
     while true; do
         output=$(acpi_listen -c 1)
-		if [[ $output == " 0B3CBB35-E3C2- 000000ff 00000000" ]] || [[ $output == "battery PNP0C0A:00 00000080 00000001" ]] ; then
+		if [[ $output == " 0B3CBB35-E3C2- 000000ff 00000000" ]] ; then
             splashMode
+        elif [[ $output == "battery PNP0C0A:00 00000080 00000001" ]] ; then
+            splash $lastMode
         fi
     done
 elif [[ $1 == "--no-notify" || $2 == "--no-notify" || $1 == "-n" || $2 == "-n" ]]; then
     while true; do
         output=$(acpi_listen -c 1)
-		if [[ $output == " 0B3CBB35-E3C2- 000000ff 00000000" ]] || [[ $output == "battery PNP0C0A:00 00000080 00000001" ]] ; then
+		if [[ $output == " 0B3CBB35-E3C2- 000000ff 00000000" ]] ; then
             noNotify
         fi
     done
 else
     while true; do
         output=$(acpi_listen -c 1)
-		if [[ $output == " 0B3CBB35-E3C2- 000000ff 00000000" ]] || [[ $output == "battery PNP0C0A:00 00000080 00000001" ]] ; then
+		if [[ $output == " 0B3CBB35-E3C2- 000000ff 00000000" ]] ; then
             fastMode
+        elif [[ $output == "battery PNP0C0A:00 00000080 00000001" ]] ; then
+            sendNotifyStandAlone
         fi
     done
 fi
