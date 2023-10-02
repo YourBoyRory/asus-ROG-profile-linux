@@ -204,20 +204,71 @@ sendNotifyStandAlone() {
     fi
 }
 
+sendBootNotify() {
+    if [[ "$1" == "Quiet" ]]; then
+        notify-send \
+            --icon="power-profile-power-saver-symbolic"\
+            -pe \
+            "Forced: $(asusctl profile -p)" \
+            "Default fan mode loaded. Fan control is listening..." > /tmp/notifyID
+    elif [[ "$1" == "Balanced" ]]; then
+        notify-send \
+            --icon="power-profile-balanced-symbolic" \
+            -pe \
+            "Forced: $(asusctl profile -p)" \
+            "Default fan mode loaded. Fan control is listening..." > /tmp/notifyID
+    elif [[ "$1" == "Performance" ]]; then
+        notify-send \
+        --icon="power-profile-performance-symbolic" \
+        -pe \
+        "Forced: $(asusctl profile -p)" \
+        "Default fan mode loaded. Fan control is listening..." > /tmp/notifyID
+    else
+        if [[ $(powerprofilesctl list | grep '*') = "* power-saver:" ]]; then
+            notify-send \
+                --icon="power-profile-power-saver-symbolic" \
+                --urgency=critical \
+                -rp \
+                $(head /tmp/notifyID) \
+                "$(asusctl profile -p)" \
+                "Loaded last profile. Fan control is listening..." > /tmp/notifyID
+            notify $?
+        elif [[ $(powerprofilesctl list | grep '*') = "* balanced:" ]]; then
+            notify-send \
+                --icon="power-profile-balanced-symbolic" \
+                --urgency=critical \
+                -rp \
+                $(head /tmp/notifyID) \
+                "$(asusctl profile -p)" \
+                "Loaded last profile. Fan control is listening..." > /tmp/notifyID
+            notify $?
+        elif [[ $(powerprofilesctl list | grep '*') = "* performance:" ]]; then
+            notify-send \
+                --icon="power-profile-performance-symbolic" \
+                --urgency=critical \
+                -rp \
+                $(head /tmp/notifyID) \
+                "$(asusctl profile -p)" \
+                "Loaded last profile. Fan control is listening..." > /tmp/notifyID
+            notify $?
+        fi
+    fi
+}
+
 if [[ $1 == "--quiet" || $2 == "--quiet" ]]; then
-	asusctl profile -PQuiet && notify-send --icon="power-profile-power-saver-symbolic" -pe "Forced: $(asusctl profile -p)" "Default fan mode loaded." > /tmp/notifyID
+	asusctl profile -PQuiet && sendBootNotify "Quiet"
     lastMode="Quiet"
 elif [[ $1 == "--balanced" || $2 == "--balanced" ]]; then
-	asusctl profile -PBalanced && notify-send --icon="power-profile-balanced-symbolic" -pe "Forced: $(asusctl profile -p)" "Default fan mode loaded." > /tmp/notifyID
+	asusctl profile -PBalanced && sendBootNotify "Balanced"
     lastMode="Balanced"
 elif [[ $1 == "--performance" || $2 == "--performance" ]]; then
-	asusctl profile -PPerformance && notify-send --icon="power-profile-performance-symbolic" -pe "Forced: $(asusctl profile -p)" "Default fan mode loaded." > /tmp/notifyID
+    asusctl profile -PPerformance && sendBootNotify "Performance"
     lastMode="Performance"
 elif [[ $1 == "-h" ]]; then
     helpDialog
 	exit
 else
-	notify-send -pe "$(asusctl profile -p)" "Fan mode changer listening..."> /tmp/notifyID
+	sendBootNotify
     lastMode=$(asusctl profile -p | awk '{print $NF}')
 fi
 
