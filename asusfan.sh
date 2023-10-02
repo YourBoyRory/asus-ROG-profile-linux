@@ -67,85 +67,81 @@ getCenter() {
 }
 
 splashMode() {
-    splash $lastMode
-    while true; do
-        output=$(acpi_listen -c 1)
-		if [[ $output = " 0B3CBB35-E3C2- 000000ff 00000000" ]]; then
-			if [[ $(powerprofilesctl list | grep '*') = "* power-saver:" ]]; then
-                if [[ "$lastMode" != "Quiet" ]] || [[ "$lastOutput" == "battery PNP0C0A:00 00000080 00000001" ]] ; then
-                    asusctl profile -PQuiet
-                    lastMode="Quiet"
-                    splash $lastMode
-                fi
-			elif [[ $(powerprofilesctl list | grep '*') = "* balanced:" ]]; then
-                if [[ "$lastMode" != "Balanced" ]] || [[ "$lastOutput" == "battery PNP0C0A:00 00000080 00000001" ]] ; then
-                    asusctl profile -PBalanced
-                    lastMode="Balanced"
-                    splash $lastMode
-                fi
-			elif [[ $(powerprofilesctl list | grep '*') = "* performance:" ]]; then
-                if [[ "$lastMode" != "Performance" ]] || [[ "$lastOutput" == "battery PNP0C0A:00 00000080 00000001" ]] ; then
-                    asusctl profile -PPerformance
-                    lastMode="Performance"
-                    splash $lastMode
-                fi
-			fi
-		fi
-        lastOutput=$output
-	done
+    if [[ $(powerprofilesctl list | grep '*') = "* power-saver:" ]]; then
+        asusctl profile -PQuiet
+        if [[ "$lastMode" != "Quiet" ]]; then
+            splash "Quiet"
+        fi
+        lastMode="Quiet"
+    elif [[ $(powerprofilesctl list | grep '*') = "* balanced:" ]]; then
+        asusctl profile -PBalanced
+        if [[ "$lastMode" != "Balanced" ]]; then
+            splash "Balanced"
+        fi
+        lastMode="Balanced"
+    elif [[ $(powerprofilesctl list | grep '*') = "* performance:" ]]; then
+        asusctl profile -PPerformance
+        if [[ "$lastMode" != "Performance" ]]; then
+            splash "Performance"
+        fi
+        lastMode="Performance"
+    fi
 }
 
 noNotify() {
-	while true; do
-        output=$(acpi_listen -c 1)
-		if [[ $output = " 0B3CBB35-E3C2- 000000ff 00000000" ]]; then
-			if [[ $(powerprofilesctl list | grep '*') = "* power-saver:" ]]; then
-                if [[ "$lastMode" != "Quiet" ]] || [[ "$lastOutput" == "battery PNP0C0A:00 00000080 00000001" ]] ; then
-                    asusctl profile -PQuiet
-                    lastMode="Quiet"
-                fi
-			elif [[ $(powerprofilesctl list | grep '*') = "* balanced:" ]]; then
-				if [[ "$lastMode" != "Balanced" ]] || [[ "$lastOutput" == "battery PNP0C0A:00 00000080 00000001" ]] ; then
-                    asusctl profile -PBalanced
-                    lastMode="Balanced"
-                fi
-			elif [[ $(powerprofilesctl list | grep '*') = "* performance:" ]]; then
-				if [[ "$lastMode" != "Performance" ]] || [[ "$lastOutput" == "battery PNP0C0A:00 00000080 00000001" ]] ; then
-                    asusctl profile -PPerformance
-                    lastMode="Performance"
-                fi
-			fi
-		fi
-        lastOutput=$output
-	done
+    if [[ $(powerprofilesctl list | grep '*') = "* power-saver:" ]]; then
+        asusctl profile -PQuiet
+        lastMode="Quiet"
+    elif [[ $(powerprofilesctl list | grep '*') = "* balanced:" ]]; then
+        asusctl profile -PBalanced
+        lastMode="Balanced"
+    elif [[ $(powerprofilesctl list | grep '*') = "* performance:" ]]; then
+        asusctl profile -PPerformance
+        lastMode="Performance"
+    fi
 }
 
 fastMode() {
-	while true; do
-        output=$(acpi_listen -c 1)
-		if [[ $output = " 0B3CBB35-E3C2- 000000ff 00000000" ]]; then
-			if [[ $(powerprofilesctl list | grep '*') = "* power-saver:" ]]; then
-                if [[ "$lastMode" != "Quiet" ]] || [[ "$lastOutput" == "battery PNP0C0A:00 00000080 00000001" ]] ; then
-                    asusctl profile -PQuiet && notify-send --icon="power-profile-power-saver-symbolic" --urgency=critical -rp $(head /tmp/notifyID) "$(asusctl profile -p)" "The CPU will under-clock to use less power and make less noise." > /tmp/notifyID
-                    notify $?
-                    lastMode="Quiet"
-                fi
-			elif [[ $(powerprofilesctl list | grep '*') = "* balanced:" ]]; then
-				if [[ "$lastMode" != "Balanced" ]] || [[ "$lastOutput" == "battery PNP0C0A:00 00000080 00000001" ]] ; then
-                    asusctl profile -PBalanced && notify-send --icon="power-profile-balanced-symbolic" --urgency=critical -rp $(head /tmp/notifyID) "$(asusctl profile -p)" "This CPU will run at base clock to balance battery and performance, fan may ramp up under load." > /tmp/notifyID
-                    notify $?
-                    lastMode="Balanced"
-                fi
-			elif [[ $(powerprofilesctl list | grep '*') = "* performance:" ]]; then
-				if [[ "$lastMode" != "Performance" ]] || [[ "$lastOutput" == "battery PNP0C0A:00 00000080 00000001" ]] ; then
-                    asusctl profile -PPerformance && notify-send --icon="power-profile-performance-symbolic" --urgency=critical -rp $(head /tmp/notifyID) "$(asusctl profile -p)" "The CPU will be allowed to boost-clock to ensure the best performance, fan will ramp up under small loads and uses more battery." > /tmp/notifyID
-                    notify $?
-                    lastMode="Performance"
-                fi
-			fi
-		fi
-        lastOutput=$output
-	done
+    if [[ $(powerprofilesctl list | grep '*') = "* power-saver:" ]]; then
+        asusctl profile -PQuiet
+        if [[ "$lastMode" != "Quiet" ]]; then
+            notify-send \
+                --icon="power-profile-power-saver-symbolic" \
+                --urgency=critical \
+                -rp \
+                $(head /tmp/notifyID) \
+                "$(asusctl profile -p)" \
+                "The CPU will under-clock to use less power and make less noise." > /tmp/notifyID
+            notify $?
+        fi
+        lastMode="Quiet"
+    elif [[ $(powerprofilesctl list | grep '*') = "* balanced:" ]]; then
+        asusctl profile -PBalanced
+        if [[ "$lastMode" != "Balanced" ]]; then
+            notify-send \
+                --icon="power-profile-balanced-symbolic" \
+                --urgency=critical \
+                -rp \
+                $(head /tmp/notifyID) \
+                "$(asusctl profile -p)" \
+                "This CPU will run at base clock to balance battery and performance, fan may ramp up under load." > /tmp/notifyID
+            notify $?
+        fi
+        lastMode="Balanced"
+    elif [[ $(powerprofilesctl list | grep '*') = "* performance:" ]]; then
+        asusctl profile -PPerformance
+        if [[ "$lastMode" != "Performance" ]]; then
+            notify-send \
+                --icon="power-profile-performance-symbolic" \
+                --urgency=critical \
+                -rp \
+                $(head /tmp/notifyID) \
+                "$(asusctl profile -p)" \
+                "The CPU will be allowed to boost-clock to ensure the best performance, fan will ramp up under small loads and uses more battery." > /tmp/notifyID
+            notify $?
+        fi
+        lastMode="Performance"
+    fi
 }
 
 if [[ $1 == "--quiet" || $2 == "--quiet" ]]; then
@@ -167,9 +163,25 @@ fi
 
 
 if [[ $1 == "--splash" || $2 == "--splash" || $1 == "-s" || $2 == "-s" ]]; then
-    splashMode
+    splash $lastMode
+    while true; do
+        output=$(acpi_listen -c 1)
+		if [[ $output == " 0B3CBB35-E3C2- 000000ff 00000000" ]] || [[ $output == "battery PNP0C0A:00 00000080 00000001" ]] ; then
+            splashMode
+        fi
+    done
 elif [[ $1 == "--no-notify" || $2 == "--no-notify" || $1 == "-n" || $2 == "-n" ]]; then
-    noNotify
+    while true; do
+        output=$(acpi_listen -c 1)
+		if [[ $output == " 0B3CBB35-E3C2- 000000ff 00000000" ]] || [[ $output == "battery PNP0C0A:00 00000080 00000001" ]] ; then
+            noNotify
+        fi
+    done
 else
-    fastMode
+    while true; do
+        output=$(acpi_listen -c 1)
+		if [[ $output == " 0B3CBB35-E3C2- 000000ff 00000000" ]] || [[ $output == "battery PNP0C0A:00 00000080 00000001" ]] ; then
+            fastMode
+        fi
+    done
 fi
