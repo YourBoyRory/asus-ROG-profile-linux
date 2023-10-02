@@ -1,5 +1,6 @@
 #!/bin/bash
 
+splashBootDelay=2
 echo 0 > /tmp/notifyCount
 
 notify() {
@@ -163,7 +164,7 @@ fi
 
 
 if [[ $1 == "--splash" || $2 == "--splash" || $1 == "-s" || $2 == "-s" ]]; then
-    splash $lastMode
+    sleep $splashBootDelay && splash $lastMode
     while true; do
         output=$(acpi_listen -c 1)
 		if [[ $output == " 0B3CBB35-E3C2- 000000ff 00000000" ]] || [[ $output == "battery PNP0C0A:00 00000080 00000001" ]] ; then
