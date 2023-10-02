@@ -1,6 +1,6 @@
 #!/bin/bash
 
-splashBootDelay=2
+splashBootDelay=5
 echo 0 > /tmp/notifyCount
 
 notify() {
@@ -56,6 +56,24 @@ splash() {
     # --center \
 }
 
+bootSplash() {
+    sleep $2
+    yad \
+    --no-buttons \
+    --on-top \
+    --undecorated \
+    --skip-taskbar \
+    --no-focus \
+    --posx=$(getCenter X) \
+    --posy=$(getCenter Y) \
+    --splash \
+    --text-align=center \
+    --image="/opt/asus-ROG-profile-linux/assets/$1.png" \
+    --sticky \
+    --timeout=1 \
+    --borders=0
+}
+
 getCenter() {
     imageX=250
     if [[ $1 == "X" ]]; then
@@ -86,6 +104,16 @@ splashMode() {
             splash "Performance"
         fi
         lastMode="Performance"
+    fi
+}
+
+splashStandAlone() {
+    if [[ $(powerprofilesctl list | grep '*') = "* power-saver:" ]]; then
+        splash "Quiet"
+    elif [[ $(powerprofilesctl list | grep '*') = "* balanced:" ]]; then
+        splash "Balanced"
+    elif [[ $(powerprofilesctl list | grep '*') = "* performance:" ]]; then
+        splash "Performance"
     fi
 }
 
@@ -195,13 +223,13 @@ fi
 
 
 if [[ $1 == "--splash" || $2 == "--splash" || $1 == "-s" || $2 == "-s" ]]; then
-    sleep $splashBootDelay && splash $lastMode
+    (bootSplash $lastMode $splashBootDelay ) &
     while true; do
         output=$(acpi_listen -c 1)
 		if [[ $output == " 0B3CBB35-E3C2- 000000ff 00000000" ]] ; then
             splashMode
         elif [[ $output == "battery PNP0C0A:00 00000080 00000001" ]] ; then
-            splash $lastMode
+            splashStandAlone
         fi
     done
 elif [[ $1 == "--no-notify" || $2 == "--no-notify" || $1 == "-n" || $2 == "-n" ]]; then
