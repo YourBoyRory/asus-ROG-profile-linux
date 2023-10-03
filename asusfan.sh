@@ -3,7 +3,7 @@
 splashBootDelay=5
 echo 0 > /tmp/notifyCount
 
-notify() {
+clearNotify() {
     if [ $1 -eq 0 ]; then
         echo $(($(head /tmp/notifyCount) + 1)) > /tmp/notifyCount
         (sleep 5 && echo $(($(head /tmp/notifyCount) - 1)) > /tmp/notifyCount; if [ $(head /tmp/notifyCount) -lt 1 ]; then notify-send -rpe $(head /tmp/notifyID) "$(asusctl profile -p)" > /tmp/notifyID; fi) &
@@ -53,7 +53,6 @@ splash() {
     --timeout=1 \
     --borders=0 ) & 
     
-    # --center \
 }
 
 bootSplash() {
@@ -141,7 +140,7 @@ fastMode() {
                 $(head /tmp/notifyID) \
                 "$(asusctl profile -p)" \
                 "The CPU will under-clock to use less power and make less noise." > /tmp/notifyID
-            notify $?
+            clearNotify $?
         fi
         lastMode="Quiet"
     elif [[ $(powerprofilesctl list | grep '*') = "* balanced:" ]]; then
@@ -154,7 +153,7 @@ fastMode() {
                 $(head /tmp/notifyID) \
                 "$(asusctl profile -p)" \
                 "This CPU will run at base clock to balance battery and performance, fan may ramp up under load." > /tmp/notifyID
-            notify $?
+            clearNotify $?
         fi
         lastMode="Balanced"
     elif [[ $(powerprofilesctl list | grep '*') = "* performance:" ]]; then
@@ -167,7 +166,7 @@ fastMode() {
                 $(head /tmp/notifyID) \
                 "$(asusctl profile -p)" \
                 "The CPU will be allowed to boost-clock to ensure the best performance, fan will ramp up under small loads and uses more battery." > /tmp/notifyID
-            notify $?
+            clearNotify $?
         fi
         lastMode="Performance"
     fi
@@ -182,7 +181,7 @@ sendNotifyStandAlone() {
             $(head /tmp/notifyID) \
             "$(asusctl profile -p)" \
             "The CPU will under-clock to use less power and make less noise." > /tmp/notifyID
-        notify $?
+        clearNotify $?
     elif [[ $(powerprofilesctl list | grep '*') = "* balanced:" ]]; then
         notify-send \
             --icon="power-profile-balanced-symbolic" \
@@ -191,7 +190,7 @@ sendNotifyStandAlone() {
             $(head /tmp/notifyID) \
             "$(asusctl profile -p)" \
             "This CPU will run at base clock to balance battery and performance, fan may ramp up under load." > /tmp/notifyID
-        notify $?
+        clearNotify $?
     elif [[ $(powerprofilesctl list | grep '*') = "* performance:" ]]; then
         notify-send \
             --icon="power-profile-performance-symbolic" \
@@ -200,7 +199,7 @@ sendNotifyStandAlone() {
             $(head /tmp/notifyID) \
             "$(asusctl profile -p)" \
             "The CPU will be allowed to boost-clock to ensure the best performance, fan will ramp up under small loads and uses more battery." > /tmp/notifyID
-        notify $?
+        clearNotify $?
     fi
 }
 
@@ -227,30 +226,21 @@ sendBootNotify() {
         if [[ $(powerprofilesctl list | grep '*') = "* power-saver:" ]]; then
             notify-send \
                 --icon="power-profile-power-saver-symbolic" \
-                --urgency=critical \
-                -rp \
-                $(head /tmp/notifyID) \
+                -pe \
                 "$(asusctl profile -p)" \
                 "Loaded last profile. Fan control is listening..." > /tmp/notifyID
-            notify $?
         elif [[ $(powerprofilesctl list | grep '*') = "* balanced:" ]]; then
             notify-send \
                 --icon="power-profile-balanced-symbolic" \
-                --urgency=critical \
-                -rp \
-                $(head /tmp/notifyID) \
+                -pe \
                 "$(asusctl profile -p)" \
                 "Loaded last profile. Fan control is listening..." > /tmp/notifyID
-            notify $?
         elif [[ $(powerprofilesctl list | grep '*') = "* performance:" ]]; then
             notify-send \
                 --icon="power-profile-performance-symbolic" \
-                --urgency=critical \
-                -rp \
-                $(head /tmp/notifyID) \
+                -pe \
                 "$(asusctl profile -p)" \
                 "Loaded last profile. Fan control is listening..." > /tmp/notifyID
-            notify $?
         fi
     fi
 }
