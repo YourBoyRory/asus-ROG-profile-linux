@@ -4,9 +4,15 @@ splashBootDelay=5
 echo 0 > /tmp/notifyCount
 
 notify() {
-    notify-send --icon="$1" --urgency=critical -rp $2 "$3" "$4" > /tmp/notifyID
+    notify-send --icon="$1" --urgency=critical -rp $(head /tmp/notifyID) "$2" "$3" > /tmp/notifyID
     echo $(($(head /tmp/notifyCount) + 1)) > /tmp/notifyCount
-    (sleep 5 && echo $(($(head /tmp/notifyCount) - 1)) > /tmp/notifyCount; if [ $(head /tmp/notifyCount) -lt 1 ]; then notify-send -rpe $(head /tmp/notifyID) "$(asusctl profile -p)" > /tmp/notifyID; fi) &
+    (
+        sleep 5 
+        echo $(($(head /tmp/notifyCount) - 1)) > /tmp/notifyCount
+        if [ $(head /tmp/notifyCount) -lt 1 ]; then 
+            notify-send --icon="$1" -rpe $(head /tmp/notifyID) "$2" "$3" > /tmp/notifyID
+        fi
+    ) &
     xdotool key alt
 }
 
@@ -22,7 +28,6 @@ helpDialog() {
 	echo "    "
 	echo "    -h                Help."
 	echo "    -s  --splash      display splash when switching, similar to the ones used in windows. Not super responsive"
-    echo "                      implies --no-notify."
 	echo "    "
 	echo "    --quiet	       Starts the script with setting the fan mode to Quiet by default."
 	echo "    --balanced       Starts the script with setting the fan mode to Balanced by default."
@@ -30,22 +35,24 @@ helpDialog() {
 	echo "    "
 }
 
+
 splash() {
-    pkill -P $$
-    ( yad \
-    --no-buttons \
-    --on-top \
-    --undecorated \
-    --skip-taskbar \
-    --no-focus \
-    --posx=$(getCenter X) \
-    --posy=$(getCenter Y) \
-    --splash \
-    --text-align=center \
-    --image="/opt/asus-ROG-profile-linux/assets/$1.png" \
-    --sticky \
-    --timeout=1 \
-    --borders=0 ) & 
+    pkill -P $$ yad
+    ( 
+        yad \
+        --no-buttons \
+        --on-top \
+        --undecorated \
+        --skip-taskbar \
+        --no-focus \
+        --posx=$(getCenter X) \
+        --posy=$(getCenter Y) \
+        --splash \
+        --text-align=center \
+        --image="/opt/asus-ROG-profile-linux/assets/$1.png" \
+        --timeout=1 \
+        --borders=0 
+    ) & 
     
 }
 
@@ -113,17 +120,23 @@ splashStandAlone() {
 notifyMode() {
     if [[ $(powerprofilesctl list | grep '*') = "* power-saver:" ]]; then
         if [[ "$lastMode" != "Quiet" ]]; then
-            notify "power-profile-power-saver-symbolic" $(head /tmp/notifyID) "$(asusctl profile -p)" "The CPU will under-clock to use less power and make less noise."
+            (
+                notify "power-profile-power-saver-symbolic" "$(asusctl profile -p)" "The CPU will under-clock to use less power and make less noise." 
+            )&
         fi
         lastMode="Quiet"
     elif [[ $(powerprofilesctl list | grep '*') = "* balanced:" ]]; then
         if [[ "$lastMode" != "Balanced" ]]; then
-            notify "power-profile-balanced-symbolic" $(head /tmp/notifyID) "$(asusctl profile -p)" "This CPU will run at base clock to balance battery and performance, fan may ramp up under load."
+            (
+                notify "power-profile-balanced-symbolic" "$(asusctl profile -p)" "This CPU will run at base clock to balance battery and performance, fan may ramp up under load." 
+            )&
         fi
         lastMode="Balanced"
     elif [[ $(powerprofilesctl list | grep '*') = "* performance:" ]]; then
         if [[ "$lastMode" != "Performance" ]]; then
-            notify "power-profile-performance-symbolic" $(head /tmp/notifyID) "$(asusctl profile -p)" "The CPU will be allowed to boost-clock to ensure the best performance, fan will ramp up under small loads and uses more battery." > /tmp/notifyID
+            (
+                notify "power-profile-performance-symbolic" "$(asusctl profile -p)" "The CPU will be allowed to boost-clock to ensure the best performance, fan will ramp up under small loads and uses more battery." 
+            )&
         fi
         lastMode="Performance"
     fi
@@ -131,13 +144,19 @@ notifyMode() {
 
 notifyStandAlone() {
     if [[ $(powerprofilesctl list | grep '*') = "* power-saver:" ]]; then
-        notify "power-profile-power-saver-symbolic" $(head /tmp/notifyID) "$(asusctl profile -p)" "The CPU will under-clock to use less power and make less noise."
+        (
+            notify "power-profile-power-saver-symbolic" "$(asusctl profile -p)" "The CPU will under-clock to use less power and make less noise."
+        )&
         lastMode="Quiet"
     elif [[ $(powerprofilesctl list | grep '*') = "* balanced:" ]]; then
-        notify "power-profile-balanced-symbolic" $(head /tmp/notifyID) "$(asusctl profile -p)" "This CPU will run at base clock to balance battery and performance, fan may ramp up under load."
+        (
+            notify "power-profile-balanced-symbolic" "$(asusctl profile -p)" "This CPU will run at base clock to balance battery and performance, fan may ramp up under load."
+        )&
         lastMode="Balanced"
     elif [[ $(powerprofilesctl list | grep '*') = "* performance:" ]]; then
-        notify "power-profile-performance-symbolic" $(head /tmp/notifyID) "$(asusctl profile -p)" "The CPU will be allowed to boost-clock to ensure the best performance, fan will ramp up under small loads and uses more battery." > /tmp/notifyID
+        (
+            notify "power-profile-performance-symbolic" "$(asusctl profile -p)" "The CPU will be allowed to boost-clock to ensure the best performance, fan will ramp up under small loads and uses more battery."
+        )&
         lastMode="Performance"
     fi
 }
@@ -198,59 +217,60 @@ asusdCheck() {
     done
 }
 
-asusdCheck
-if [[ $1 == "--quiet" || $2 == "--quiet" ]]; then
-    asusctl profile -PQuiet && sendBootNotify "Quiet"
-    lastMode="Quiet"
-elif [[ $1 == "--balanced" || $2 == "--balanced" ]]; then
-    asusctl profile -PBalanced && sendBootNotify "Balanced"
-    lastMode="Balanced"
-elif [[ $1 == "--performance" || $2 == "--performance" ]]; then
-    asusctl profile -PPerformance && sendBootNotify "Performance"
-    lastMode="Performance"
-elif [[ $1 == "-h" ]]; then
-    helpDialog
-    exit
-else
-    sendBootNotify
-    lastMode=$(asusctl profile -p | awk '{print $NF}')
-fi
+runDriver() {
+    if [[ $1 == "--splash" || $2 == "--splash" || $1 == "-s" || $2 == "-s" ]]; then
+        (bootSplash $lastMode $splashBootDelay ) &
+        error=0
+        while [[ $error -eq 0 ]] ; do
+            output=$(acpi_listen -c 1)
+            error=$?
+            if [[ $output == " 0B3CBB35-E3C2- 000000ff 00000000" ]] ; then
+                splashMode
+                asusdCheck
+            elif [[ $output == "battery PNP0C0A:00 00000080 00000001" ]] ; then
+                splashStandAlone
+                asusdCheck
+            fi
+        done
+    else
+        while [[ $error -eq 0 ]] ; do
+            output=$(acpi_listen -c 1)
+            error=$?
+            if [[ $output == " 0B3CBB35-E3C2- 000000ff 00000000" ]] ; then
+                notifyMode
+                asusdCheck &
+            elif [[ $output == "battery PNP0C0A:00 00000080 00000001" ]] ; then
+                notifyStandAlone
+                asusdCheck &
+            fi
+        done
+    fi
+    notify-send "Please Authenticate ACPI" "Enable acpid with systemctl to prevent this popup"
+    systemctl start acpid
+    asusdCheck
+    sleep 5
+    runDriver
+}
 
+main() {
+    asusdCheck
+    if [[ $1 == "--quiet" || $2 == "--quiet" ]]; then
+        asusctl profile -PQuiet && sendBootNotify "Quiet"
+        lastMode="Quiet"
+    elif [[ $1 == "--balanced" || $2 == "--balanced" ]]; then
+        asusctl profile -PBalanced && sendBootNotify "Balanced"
+        lastMode="Balanced"
+    elif [[ $1 == "--performance" || $2 == "--performance" ]]; then
+        asusctl profile -PPerformance && sendBootNotify "Performance"
+        lastMode="Performance"
+    elif [[ $1 == "-h" ]]; then
+        helpDialog
+        exit
+    else
+        sendBootNotify
+        lastMode=$(asusctl profile -p | awk '{print $NF}')
+    fi
+    runDriver $1 $2
+}
 
-
-if [[ $1 == "--splash" || $2 == "--splash" || $1 == "-s" || $2 == "-s" ]]; then
-    (bootSplash $lastMode $splashBootDelay ) &
-    while true; do
-        output=$(acpi_listen -c 1)
-        error=$?
-		if [[ $output == " 0B3CBB35-E3C2- 000000ff 00000000" ]] ; then
-            splashMode
-            asusdCheck &
-        elif [[ $output == "battery PNP0C0A:00 00000080 00000001" ]] ; then
-            splashStandAlone
-            asusdCheck &
-        elif [ $error -eq 1 ] ; then
-            notify-send "Please Authenticate ACPI" "Enable acpid with systemctl to prevent this popup"
-            systemctl start acpid
-            sleep 5
-            asusdCheck
-        fi
-    done
-else
-    while true; do
-        output=$(acpi_listen -c 1)
-        error=$?
-		if [[ $output == " 0B3CBB35-E3C2- 000000ff 00000000" ]] ; then
-            notifyMode
-            asusdCheck &
-        elif [[ $output == "battery PNP0C0A:00 00000080 00000001" ]] ; then
-            notifyStandAlone
-            asusdCheck &
-        elif [ $error -eq 1 ] ; then
-            notify-send "Please Authenticate ACPI" "Enable acpid with systemctl to prevent this popup"
-            systemctl start acpid
-            sleep 5
-            asusdCheck
-        fi
-    done
-fi
+main $1 $2
