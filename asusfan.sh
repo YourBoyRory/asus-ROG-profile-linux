@@ -267,26 +267,41 @@ if [[ $1 == "--splash" || $2 == "--splash" || $1 == "-s" || $2 == "-s" ]]; then
     (bootSplash $lastMode $splashBootDelay ) &
     while true; do
         output=$(acpi_listen -c 1)
+        error=$?
 		if [[ $output == " 0B3CBB35-E3C2- 000000ff 00000000" ]] ; then
             splashMode
         elif [[ $output == "battery PNP0C0A:00 00000080 00000001" ]] ; then
             splashStandAlone
+        elif [ $error -eq 1 ] ; then
+            notify-send "Please Authenticate ACPI" "Enable acpid with systemctl to prevent this popup"
+            systemctl start acpid
+            sleep 5
         fi
     done
 elif [[ $1 == "--no-notify" || $2 == "--no-notify" || $1 == "-n" || $2 == "-n" ]]; then
     while true; do
         output=$(acpi_listen -c 1)
+        error=$?
 		if [[ $output == " 0B3CBB35-E3C2- 000000ff 00000000" ]] ; then
             noNotify
+        elif [ $error -eq 1 ] ; then
+            notify-send "Please Authenticate ACPI" "Enable acpid with systemctl to prevent this popup"
+            systemctl start acpid
+            sleep 5
         fi
     done
 else
     while true; do
         output=$(acpi_listen -c 1)
+        error=$?
 		if [[ $output == " 0B3CBB35-E3C2- 000000ff 00000000" ]] ; then
             fastMode
         elif [[ $output == "battery PNP0C0A:00 00000080 00000001" ]] ; then
             sendNotifyStandAlone
+        elif [ $error -eq 1 ] ; then
+            notify-send "Please Authenticate ACPI" "Enable acpid with systemctl to prevent this popup"
+            systemctl start acpid
+            sleep 5
         fi
     done
 fi
