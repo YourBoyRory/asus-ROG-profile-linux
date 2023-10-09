@@ -1,7 +1,24 @@
 #!/bin/bash
 
+mkdir ~/.config/asusFanDriver/ 2> /dev/null
+cd ~/.config/asusFanDriver/
+rogCfg="./rog.cfg"
+fanCfg="./fan.cfg"
 splashBootDelay=5
 echo 0 > /tmp/notifyCount
+
+readConfig() {
+    # ROG Var
+    rogLEDStartup=$(grep -oP '^rogLEDStartup=\K.*' $rogCfg | head -n1 )
+    rogCLRMode=$(grep -oP '^rogCLRMode=\K.*' $rogCfg | head -n1 )
+    rogCLRSpeed=$(grep -oP '^rogCLRSpeed=\K.*' $rogCfg | head -n1 )
+    rogPrimaryCLR=$(grep -oP '^rogPrimaryCLR=\K.*' $rogCfg | head -n1 )
+    rogSecondaryCLR=$(grep -oP '^rogSecondaryCLR=\K.*' $rogCfg | head -n1 )
+    
+    # Fan
+    rogFanDisplayMode=$(grep -oP '^rogFanDisplayMode=\K.*' $fanCfg | head -n1 )
+    rogDefaultFanMode=$(grep -oP '^rogDefaultFanMode=\K.*' $fanCfg | head -n1 )
+}
 
 notify() {
     notify-send --icon="$1" --urgency=critical -rp $(head /tmp/notifyID) "$2" "$3" > /tmp/notifyID
@@ -218,7 +235,7 @@ asusdCheck() {
 }
 
 runDriver() {
-    if [[ $1 == "--splash" || $2 == "--splash" || $1 == "-s" || $2 == "-s" ]]; then
+    if [[ $1 == "--splash" || $2 == "--splash" || $1 == "-s" || $2 == "-s" || $rogFanDisplayMode == "Splash" ]]; then
         (bootSplash $lastMode $splashBootDelay ) &
         error=0
         while [[ $error -eq 0 ]] ; do
@@ -252,9 +269,9 @@ runDriver() {
     runDriver
 }
 
-main() {
+mainCML() {
     asusdCheck
-    if [[ $1 == "--quiet" || $2 == "--quiet" ]]; then
+    if  [[ $1 == "--quiet" || $2 == "--quiet" ]] ; then
         asusctl profile -PQuiet && sendBootNotify "Quiet"
         lastMode="Quiet"
     elif [[ $1 == "--balanced" || $2 == "--balanced" ]]; then
@@ -263,9 +280,6 @@ main() {
     elif [[ $1 == "--performance" || $2 == "--performance" ]]; then
         asusctl profile -PPerformance && sendBootNotify "Performance"
         lastMode="Performance"
-    elif [[ $1 == "-h" ]]; then
-        helpDialog
-        exit
     else
         sendBootNotify
         lastMode=$(asusctl profile -p | awk '{print $NF}')
@@ -273,4 +287,50 @@ main() {
     runDriver $1 $2
 }
 
-main $1 $2
+main() {
+    asusdCheck
+    if [[ "$rogDefaultFanMode" == "Quiet" ]]; then
+        asusctl profile -PQuiet && sendBootNotify "Quiet"
+        lastMode="Quiet"
+    elif [[ "$rogDefaultFanMode" == "Balanced" ]]; then
+        asusctl profile -PBalanced && sendBootNotify "Balanced"
+        lastMode="Balanced"
+    elif [[ "$rogDefaultFanMode" == "Performance" ]]; then
+        asusctl profile -PPerformance && sendBootNotify "Performance"
+        lastMode="Performance"
+    else
+        sendBootNotify
+        lastMode=$(asusctl profile -p | awk '{print $NF}')
+    fi
+    runDriver $1 $2
+}
+
+readConfig
+
+if [[ $rogLEDStartup == "TRUE" ]] ; then
+    if [[ $rogCLRMode == "Rainbow" ]] ; then
+        asusctl led-mode strobe -s $rogCLRSpeed
+    elif [[ $rogCLRMode == "Breathe" ]] ; then
+        asusctl led-mode breathe -c ${rogPrimaryCLR:1} -C ${rogSecondaryCLR:1} -s $rogCLRSpeed
+    elif [[ $rogCLRMode == "Pulse" ]] ; then
+        asusctl led-mode pulse -c ${rogPrimaryCLR:1}
+    else 
+        asusctl led-mode static -c ${rogPrimaryCLR:1}
+    fi
+fi 
+
+if [[ $rogFanDisplayMode != "None" ]] ; then
+    if [[ "$1" != "" ]] ; then
+        if [[ $1 == "-h" ]]; then
+            helpDialog
+            exit
+        elif [[ $1 == "--splash" || $1 == "-s" && $2 == "" ]]  ; then
+            main
+        else 
+            mainCML $1 $2
+        fi
+    else
+        main
+    fi
+fi
+
