@@ -1,16 +1,16 @@
 #!/bin/bash
 
+userName=$(getent passwd "$USER" | cut -d ':' -f 3 | cut -d ',' -f 1)
+
 mkdir ~/.config/asusFanDriver/ 2> /dev/null
 cd ~/.config/asusFanDriver/
 rogCfg="./rog.cfg"
 fanCfg="./fan.cfg"
 splashBootDelay=5
-touch /tmp/notifyCount
-touch /tmp/notifyID
-chmod 777 /tmp/notifyCount
-chmod 777 /tmp/notifyID
+touch /tmp/notifyCount_$userName
+touch /tmp/notifyID_$userName
 
-echo 0 > /tmp/notifyCount
+echo 0 > /tmp/notifyCount_$userName
 
 readConfig() {
     # ROG Var
@@ -26,13 +26,13 @@ readConfig() {
 }
 
 notify() {
-    notify-send --icon="$1" --urgency=critical -rp $(head /tmp/notifyID) "$2" "$3" > /tmp/notifyID
-    echo $(($(head /tmp/notifyCount) + 1)) > /tmp/notifyCount
+    notify-send --icon="$1" --urgency=critical -rp $(head /tmp/notifyID_$userName) "$2" "$3" > /tmp/notifyID_$userName
+    echo $(($(head /tmp/notifyCount_$userName) + 1)) > /tmp/notifyCount_$userName
     (
         sleep 5 
-        echo $(($(head /tmp/notifyCount) - 1)) > /tmp/notifyCount
-        if [ $(head /tmp/notifyCount) -lt 1 ]; then 
-            notify-send --icon="$1" -rpe $(head /tmp/notifyID) "$2" "$3" > /tmp/notifyID
+        echo $(($(head /tmp/notifyCount_$userName) - 1)) > /tmp/notifyCount_$userName
+        if [ $(head /tmp/notifyCount_$userName) -lt 1 ]; then 
+            notify-send --icon="$1" -rpe $(head /tmp/notifyID_$userName "$2" "$3" > /tmp/notifyID_$userName)
         fi
     ) &
     xdotool key alt
@@ -189,38 +189,38 @@ sendBootNotify() {
             --icon="power-profile-power-saver-symbolic"\
             -pe \
             "Forced: $(asusctl profile -p)" \
-            "Default fan mode loaded. Fan control is listening..." > /tmp/notifyID
+            "Default fan mode loaded. Fan control is listening..." > /tmp/notifyID_$userName
     elif [[ "$1" == "Balanced" ]]; then
         notify-send \
             --icon="power-profile-balanced-symbolic" \
             -pe \
             "Forced: $(asusctl profile -p)" \
-            "Default fan mode loaded. Fan control is listening..." > /tmp/notifyID
+            "Default fan mode loaded. Fan control is listening..." > /tmp/notifyID_$userName
     elif [[ "$1" == "Performance" ]]; then
         notify-send \
         --icon="power-profile-performance-symbolic" \
         -pe \
         "Forced: $(asusctl profile -p)" \
-        "Default fan mode loaded. Fan control is listening..." > /tmp/notifyID
+        "Default fan mode loaded. Fan control is listening..." > /tmp/notifyID_$userName
     else
         if [[ $(powerprofilesctl list | grep '*') = "* power-saver:" ]]; then
             notify-send \
                 --icon="power-profile-power-saver-symbolic" \
                 -pe \
                 "$(asusctl profile -p)" \
-                "Loaded last profile. Fan control is listening..." > /tmp/notifyID
+                "Loaded last profile. Fan control is listening..." > /tmp/notifyID_$userName
         elif [[ $(powerprofilesctl list | grep '*') = "* balanced:" ]]; then
             notify-send \
                 --icon="power-profile-balanced-symbolic" \
                 -pe \
                 "$(asusctl profile -p)" \
-                "Loaded last profile. Fan control is listening..." > /tmp/notifyID
+                "Loaded last profile. Fan control is listening..." > /tmp/notifyID_$userName
         elif [[ $(powerprofilesctl list | grep '*') = "* performance:" ]]; then
             notify-send \
                 --icon="power-profile-performance-symbolic" \
                 -pe \
                 "$(asusctl profile -p)" \
-                "Loaded last profile. Fan control is listening..." > /tmp/notifyID
+                "Loaded last profile. Fan control is listening..." > /tmp/notifyID_$userName
         fi
     fi
 }
@@ -329,7 +329,7 @@ if [[ $rogFanDisplayMode != "None" ]] ; then
         if [[ $1 == "-h" ]]; then
             helpDialog
             exit
-        elif [[ $1 == "--splash" || $1 == "-s" && $2 == "" ]]  ; then
+        elif [[ "$1" == "--splash" || "$1" == "-s" && $2 == "" ]]  ; then
             main
         else 
             mainCML $1 $2
