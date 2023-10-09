@@ -5,6 +5,11 @@ cd ~/.config/asusFanDriver/
 rogCfg="./rog.cfg"
 fanCfg="./fan.cfg"
 splashBootDelay=5
+touch /tmp/notifyCount
+touch /tmp/notifyID
+chmod 666 /tmp/notifyCount
+chmod 666 /tmp/notifyID
+
 echo 0 > /tmp/notifyCount
 
 readConfig() {
