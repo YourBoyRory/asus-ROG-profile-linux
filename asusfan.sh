@@ -7,8 +7,8 @@ fanCfg="./fan.cfg"
 splashBootDelay=5
 touch /tmp/notifyCount
 touch /tmp/notifyID
-chmod 666 /tmp/notifyCount
-chmod 666 /tmp/notifyID
+chmod 777 /tmp/notifyCount
+chmod 777 /tmp/notifyID
 
 echo 0 > /tmp/notifyCount
 
