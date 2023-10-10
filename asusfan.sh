@@ -29,6 +29,7 @@ notify() {
     notify-send --icon="$1" --urgency=critical -rp $(head /tmp/notifyID_$userName) "$2" "$3" > /tmp/notifyID_$userName
     echo $(($(head /tmp/notifyCount_$userName) + 1)) > /tmp/notifyCount_$userName
     (
+        userName=$(getent passwd "$USER" | cut -d ':' -f 3 | cut -d ',' -f 1)
         sleep 5 
         echo $(($(head /tmp/notifyCount_$userName) - 1)) > /tmp/notifyCount_$userName
         if [ $(head /tmp/notifyCount_$userName) -lt 1 ]; then 

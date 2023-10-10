@@ -57,7 +57,7 @@ writeConfig() {
 readConfig
 
 # Fix Case Var
-rogCLRMode=$(setCBValue "Static!Breath!Pulse!Rainbow" "$rogCLRMode")
+rogCLRMode=$(setCBValue "Static!Breathe!Pulse!Rainbow" "$rogCLRMode")
 rogCLRSpeed=$(setCBValue "low!med!high" "$rogCLRSpeed")
 
 rogDefaultFanMode=$(setCBValue "Saved!Quiet!Balanced!Performance" "$rogDefaultFanMode")
