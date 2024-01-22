@@ -1,0 +1,8 @@
+[Unit]
+Description=Ryzen CPU Profile Daemon
+
+[Service]
+ExecStart=/opt/asus-ROG-profile-linux/cpu-profile-daemon.sh
+
+[Install]
+WantedBy=multi-user.target

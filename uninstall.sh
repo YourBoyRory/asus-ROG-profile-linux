@@ -1,5 +1,6 @@
 #!/bin/bash
 
-sudo rm -r /opt/asus-ROG-profile-linux/
-sudo rm /usr/local/bin/asusfan
-sudo rm /usr/local/bin/asusfan-config
+cd ./asus-splash/
+sudo sh ./uninstall.sh
+cd ../ryzen-cpu-profile-daemon/
+sudo sh ./uninstall.sh
