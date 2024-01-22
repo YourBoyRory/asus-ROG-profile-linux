@@ -109,17 +109,18 @@ getCenter() {
 }
 
 splashMode() {
-    if [[ $(powerprofilesctl list | grep '*') = "* power-saver:" ]]; then
+	powProfile=$(powerprofilesctl get)
+    if [[ "$powProfile" == "power-saver" ]]; then
         if [[ "$lastMode" != "Quiet" ]]; then
             splash "$(asusctl profile -p | awk '{print $NF}')"
         fi
         lastMode="Quiet"
-    elif [[ $(powerprofilesctl list | grep '*') = "* balanced:" ]]; then
+    elif [[ "$powProfile" == "balanced" ]]; then
         if [[ "$lastMode" != "Balanced" ]]; then
             splash "$(asusctl profile -p | awk '{print $NF}')"
         fi
         lastMode="Balanced"
-    elif [[ $(powerprofilesctl list | grep '*') = "* performance:" ]]; then
+    elif [[ "$powProfile" == "performance" ]]; then
         if [[ "$lastMode" != "Performance" ]]; then
             splash "$(asusctl profile -p | awk '{print $NF}')"
         fi
@@ -128,34 +129,37 @@ splashMode() {
 }
 
 splashStandAlone() {
-    if [[ $(powerprofilesctl list | grep '*') = "* power-saver:" ]]; then
+	sleep 2
+	powProfile=$(powerprofilesctl get)
+    if [[ "$powProfile" == "power-saver" ]]; then
         splash "$(asusctl profile -p | awk '{print $NF}')"
         lastMode="Quiet"
-    elif [[ $(powerprofilesctl list | grep '*') = "* balanced:" ]]; then
+    elif [[ "$powProfile" == "balanced" ]]; then
         splash "$(asusctl profile -p | awk '{print $NF}')"
         lastMode="Balanced"
-    elif [[ $(powerprofilesctl list | grep '*') = "* performance:" ]]; then
+    elif [[ "$powProfile" == "performance" ]]; then
         splash "$(asusctl profile -p | awk '{print $NF}')"
         lastMode="Performance"
     fi
 }
 
 notifyMode() {
-    if [[ $(powerprofilesctl list | grep '*') = "* power-saver:" ]]; then
+	powProfile=$(powerprofilesctl get)
+    if [[ "$powProfile" == "power-saver" ]]; then
         if [[ "$lastMode" != "Quiet" ]]; then
             (
                 notify "power-profile-power-saver-symbolic" "$(asusctl profile -p)" "The CPU will under-clock to use less power and make less noise." 
             )&
         fi
         lastMode="Quiet"
-    elif [[ $(powerprofilesctl list | grep '*') = "* balanced:" ]]; then
+    elif [[ "$powProfile" == "balanced" ]]; then
         if [[ "$lastMode" != "Balanced" ]]; then
             (
                 notify "power-profile-balanced-symbolic" "$(asusctl profile -p)" "This CPU will run at base clock to balance battery and performance, fan may ramp up under load." 
             )&
         fi
         lastMode="Balanced"
-    elif [[ $(powerprofilesctl list | grep '*') = "* performance:" ]]; then
+    elif [[ "$powProfile" == "performance" ]]; then
         if [[ "$lastMode" != "Performance" ]]; then
             (
                 notify "power-profile-performance-symbolic" "$(asusctl profile -p)" "The CPU will be allowed to boost-clock to ensure the best performance, fan will ramp up under small loads and uses more battery." 
@@ -166,17 +170,18 @@ notifyMode() {
 }
 
 notifyStandAlone() {
-    if [[ $(powerprofilesctl list | grep '*') = "* power-saver:" ]]; then
+	powProfile=$(powerprofilesctl get)
+    if [[ "$powProfile" == "power-saver" ]]; then
         (
             notify "power-profile-power-saver-symbolic" "$(asusctl profile -p)" "The CPU will under-clock to use less power and make less noise."
         )&
         lastMode="Quiet"
-    elif [[ $(powerprofilesctl list | grep '*') = "* balanced:" ]]; then
+    elif [[ "$powProfile" == "balanced" ]]; then
         (
             notify "power-profile-balanced-symbolic" "$(asusctl profile -p)" "This CPU will run at base clock to balance battery and performance, fan may ramp up under load."
         )&
         lastMode="Balanced"
-    elif [[ $(powerprofilesctl list | grep '*') = "* performance:" ]]; then
+    elif [[ "$powProfile" == "performance" ]]; then
         (
             notify "power-profile-performance-symbolic" "$(asusctl profile -p)" "The CPU will be allowed to boost-clock to ensure the best performance, fan will ramp up under small loads and uses more battery."
         )&
@@ -204,19 +209,20 @@ sendBootNotify() {
         "Forced: $(asusctl profile -p)" \
         "Default fan mode loaded. Fan control is listening..." > /tmp/notifyID_$userName
     else
-        if [[ $(powerprofilesctl list | grep '*') = "* power-saver:" ]]; then
+		powProfile=$(powerprofilesctl get)
+        if [[ "$powProfile" == "power-saver" ]]; then
             notify-send \
                 --icon="power-profile-power-saver-symbolic" \
                 -pe \
                 "$(asusctl profile -p)" \
                 "Loaded last profile. Fan control is listening..." > /tmp/notifyID_$userName
-        elif [[ $(powerprofilesctl list | grep '*') = "* balanced:" ]]; then
+        elif [[ "$powProfile" == "balanced" ]]; then
             notify-send \
                 --icon="power-profile-balanced-symbolic" \
                 -pe \
                 "$(asusctl profile -p)" \
                 "Loaded last profile. Fan control is listening..." > /tmp/notifyID_$userName
-        elif [[ $(powerprofilesctl list | grep '*') = "* performance:" ]]; then
+        elif [[ "$powProfile" == "performance" ]]; then
             notify-send \
                 --icon="power-profile-performance-symbolic" \
                 -pe \
