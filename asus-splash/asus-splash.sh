@@ -25,7 +25,7 @@ helpDialog() {
 splash() {
     pkill -P $$ yad
     ( 
-        yad \
+        GDK_BACKEND=x11 yad \
         --no-buttons \
         --on-top \
         --undecorated \
