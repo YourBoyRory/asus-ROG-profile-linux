@@ -1,0 +1,11 @@
+[Unit]
+Description=Display profile splash when profile changes
+After=graphical-session.target
+Wants=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/power-profile-splash-service
+
+[Install]
+WantedBy=graphical-session.target
