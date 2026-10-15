@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=rog-control-center
+Comment=Run rog-control-center
+Exec=sh -c "sleep 5; rog-control-center --autostart --background"
+Terminal=false
+Type=Application
