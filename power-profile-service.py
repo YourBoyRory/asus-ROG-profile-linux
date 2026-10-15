@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
 import tkinter as tk
-import subprocess
+from PIL import Image, ImageTk
+import sys
 import psutil
+
 import pyudev
 import os
 
@@ -12,11 +14,15 @@ class Splash:
     root = tk.Tk()
     root.withdraw()
 
+    def __init__(self, assets):
+        self.assets = assets
+
     def __kill_myself(self):
         try:
             parent = psutil.Process(self.process.pid)
             parent.kill()
         except Exception as e:
+            # I cant even do that right
             pass
 
     def __get_center(self):
@@ -29,33 +35,46 @@ class Splash:
     def show(self, active_profile):
         self.__kill_myself()
         screen_width, screen_height = self.__get_center()
-        file = os.path.abspath(f"/usr/local/share/power-profile-splash-service/assets/{active_profile}.png")
-        self.process = subprocess.Popen(
-            [
-                "yad",
-                "--no-buttons",
-                "--on-top",
-                "--undecorated",
-                "--skip-taskbar",
-                "--no-focus",
-                f"--posx={screen_width}",
-                f"--posy={screen_height}",
-                "--splash",
-                "--text-align=center",
-                f"--image={file}",
-                "--timeout=1",
-                "--borders=0",
-            ],
-            env={**os.environ, "GDK_BACKEND": "x11"},
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            start_new_session=True,
+        file = os.path.abspath(f"{self.assets}/{active_profile}.png")
+        print(file)
+
+        root = tk.Tk()
+
+        # Remove window decorations and bypass normal window management.
+        root.overrideredirect(True)
+
+        # Keep the popup above normal windows.
+        root.attributes("-topmost", True)
+
+        # Load and display the image.
+        image = Image.open(file)
+        photo = ImageTk.PhotoImage(image)
+
+        label = tk.Label(
+            root,
+            image=photo,
+            borderwidth=0,
+            highlightthickness=0,
+            padx=0,
+            pady=0,
         )
+        label.pack()
+
+        # Position the window at the requested coordinates.
+        root.geometry(f"{image.width}x{image.height}+{screen_width}+{screen_height}")
+
+        # Avoid requesting focus.
+        root.focusmodel("passive")
+
+        # Close after one second.
+        root.after(1000, root.destroy)
+
+        root.mainloop()
 
 def main():
     context = pyudev.Context()
     monitor = pyudev.Monitor.from_netlink(context)
-    splash = Splash()
+    splash = Splash("/usr/local/share/power-profile-splash-service/assets")
     monitor.filter_by(subsystem='platform-profile')
     for device in iter(monitor.poll, None):
         if device.action == 'change':
@@ -72,5 +91,10 @@ def main():
             except FileNotFoundError:
                 print(f"Could not read profile state at {profile_path}")
 
+def just_splash():
+    splash = Splash("./assets")
+    splash.show("quiet")
+
 if __name__ == "__main__":
-    main()
+    #main()
+    just_splash()
