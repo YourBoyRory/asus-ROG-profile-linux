@@ -12,9 +12,6 @@ class Splash:
     root = tk.Tk()
     root.withdraw()
 
-
-
-
     def __kill_myself(self):
         try:
             parent = psutil.Process(self.process.pid)
@@ -74,8 +71,6 @@ def main():
                     splash.show("performance")
             except FileNotFoundError:
                 print(f"Could not read profile state at {profile_path}")
-
-def just_lib
 
 if __name__ == "__main__":
     main()
